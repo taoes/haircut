@@ -12,7 +12,6 @@ import {
   UserOutlined,
   DollarOutlined
 } from '@ant-design/icons';
-import dayjs from 'dayjs';
 
 function Order() {
   const [orders, setOrders] = useState([]);
@@ -33,7 +32,7 @@ function Order() {
       changeAmount: -50.00,
       operator: '管理员A',
       operateTime: '2024-03-20 14:30:00',
-      type: 'consume'
+      type: 'consume' // consume: 消费, recharge: 充值
     },
     {
       id: 2,
@@ -140,7 +139,7 @@ function Order() {
             <UserOutlined />
             <span>{record.userName}</span>
           </Space>
-          <Space style={{ fontSize: '12px', color: '#666' }}>
+          <Space style={{ fontSize: '12px', color: '#888' }}>
             <span>{record.userPhone}</span>
           </Space>
         </Space>
@@ -216,85 +215,69 @@ function Order() {
   ];
 
   return (
-    <div style={{ 
-      padding: '32px 48px',
-      backgroundColor: '#f5f5f5',
-      minHeight: '100vh'
-    }}>
-      <div style={{ 
-        backgroundColor: '#fff',
-        borderRadius: '8px',
-        padding: '24px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-      }}>
-        <div style={{ marginBottom: '24px' }}>
-          <h1 style={{ 
-            fontSize: '24px', 
-            fontWeight: '600', 
-            marginBottom: '16px',
-            color: '#333'
-          }}>
-            订单管理
-          </h1>
+    <div style={{ padding: '24px' }}>
+      <div style={{ marginBottom: '24px' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>
+          订单管理
+        </h1>
+        
+        {/* 搜索区域 */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          marginBottom: '16px'
+        }}>
+          <Space>
+            <Input
+              placeholder="请输入用户名或手机号搜索"
+              prefix={<SearchOutlined />}
+              style={{ width: 300 }}
+              onPressEnter={(e) => handleSearch(e.target.value)}
+              allowClear
+            />
+            <Button 
+              type="primary" 
+              icon={<SearchOutlined />}
+              onClick={(e) => {
+                const input = e.target.closest('.ant-input-affix-wrapper')?.querySelector('input');
+                handleSearch(input?.value || '');
+              }}
+            >
+              搜索
+            </Button>
+          </Space>
           
-          {/* 搜索区域 */}
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            marginBottom: '16px'
-          }}>
-            <Space>
-              <Input
-                placeholder="请输入用户名或手机号搜索"
-                prefix={<SearchOutlined />}
-                style={{ width: 300 }}
-                onPressEnter={(e) => handleSearch(e.target.value)}
-                allowClear
-              />
-              <Button 
-                type="primary" 
-                icon={<SearchOutlined />}
-                onClick={(e) => {
-                  const input = e.target.closest('.ant-input-affix-wrapper')?.querySelector('input');
-                  handleSearch(input?.value || '');
-                }}
-              >
-                搜索
-              </Button>
-            </Space>
-            
-            <div style={{ fontSize: '14px', color: '#666' }}>
-              共 {total} 条订单记录
-            </div>
+          <div style={{ fontSize: '14px', color: '#666' }}>
+            共 {total} 条订单记录
           </div>
         </div>
-
-        {/* 订单表格 */}
-        <Table
-          columns={columns}
-          dataSource={orders}
-          loading={loading}
-          rowKey="id"
-          pagination={{
-            current: currentPage,
-            pageSize: pageSize,
-            total: total,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total) => `共 ${total} 条记录`,
-            onChange: (page, size) => {
-              setCurrentPage(page);
-              setPageSize(size);
-            },
-            onShowSizeChange: (current, size) => {
-              setPageSize(size);
-              setCurrentPage(1);
-            }
-          }}
-          scroll={{ x: 1000 }}
-        />
       </div>
+
+      {/* 订单表格 */}
+      <Table
+        columns={columns}
+        dataSource={orders}
+        loading={loading}
+        rowKey="id"
+        pagination={{
+          current: currentPage,
+          pageSize: pageSize,
+          total: total,
+          showSizeChanger: true,
+          showQuickJumper: true,
+          showTotal: (total) => `共 ${total} 条记录`,
+          onChange: (page, size) => {
+            setCurrentPage(page);
+            setPageSize(size);
+          },
+          onShowSizeChange: (current, size) => {
+            setPageSize(size);
+            setCurrentPage(1);
+          }
+        }}
+        scroll={{ x: 1000 }}
+      />
     </div>
   );
 }
