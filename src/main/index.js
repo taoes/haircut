@@ -3,18 +3,11 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 
-
-import dbManager from './database.js'
-import IPCHandler from './ipcHandler.js'
-
-let mainWindow = null;
-let ipcHandler = null;
-
 function createWindow() {
   // Create the browser window.
-  mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+  const mainWindow = new BrowserWindow({
+    width: 900,
+    height: 670,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
@@ -56,23 +49,6 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // 初始化数据库
-  try {
-    console.log('正在初始化数据库...');
-    // 数据库已经在dbManager中自动初始化
-    console.log('数据库初始化完成');
-  } catch (error) {
-    console.error('数据库初始化失败:', error);
-  }
-
-  // 初始化IPC处理器
-  try {
-    ipcHandler = new IPCHandler();
-    console.log('IPC处理器初始化完成');
-  } catch (error) {
-    console.error('IPC处理器初始化失败:', error);
-  }
-
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
@@ -89,18 +65,8 @@ app.whenReady().then(() => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
-  if (dbManager) {
-    dbManager.close();
-  }
   if (process.platform !== 'darwin') {
     app.quit()
-  }
-})
-
-// 关闭前清理资源
-app.on('before-quit', () => {
-  if (dbManager) {
-    dbManager.close();
   }
 })
 
