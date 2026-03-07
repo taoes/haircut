@@ -34,7 +34,7 @@ class UserDao {
             console.log("查询用户列表结果:", users);
             
             // 获取总数
-            let countSql = `SELECT COUNT(*) as total FROM users WHERE 1=1`;
+            let countSql = `SELECT COUNT(1) as total FROM users WHERE 1=1`;
             const countParams = [];
             
             if (searchText) {

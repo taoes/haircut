@@ -145,7 +145,7 @@ function About() {
               </Paragraph>
 
               <Divider orientation="left">
-                <Text strong style={{ color: '#1890ff' }}>提升运营效率</Text>
+                <Text strong >提升运营效率</Text>
               </Divider>
 
               <Paragraph>
@@ -155,10 +155,6 @@ function About() {
                 做出更加精准的商业决策。
               </Paragraph>
 
-              <Divider orientation="left">
-                <Text strong style={{ color: '#52c41a' }}>优化客户体验</Text>
-              </Divider>
-
               <Paragraph>
                 系统为客户提供透明的账户管理体系，余额变动实时更新，消费记录清晰可查。
                 这不仅增强了客户的信任感，也为会员制度的实施提供了技术支撑。
@@ -166,9 +162,6 @@ function About() {
                 提升客户粘性和复购率。
               </Paragraph>
 
-              <Divider orientation="left">
-                <Text strong style={{ color: '#faad14' }}>降低运营成本</Text>
-              </Divider>
 
               <Paragraph>
                 数字化管理显著减少了人力成本和时间投入。自动化的工作流程减少了人为错误，
@@ -176,9 +169,6 @@ function About() {
                 有效防范财务风险，为理发店的可持续发展奠定坚实基础。
               </Paragraph>
 
-              <Divider orientation="left">
-                <Text strong style={{ color: '#722ed1' }}>未来展望</Text>
-              </Divider>
 
               <Paragraph>
                 Haircut系统采用现代化的技术架构，具备良好的扩展性和兼容性。
@@ -186,6 +176,7 @@ function About() {
                 而React+Ant Design的技术组合保证了优秀的用户体验。
                 我们将持续优化系统功能，为更多理发店的数字化转型贡献力量，
                 助力传统美业拥抱科技，实现跨越式发展。
+                
               </Paragraph>
 
               <div style={{ 
@@ -196,7 +187,7 @@ function About() {
                 borderRadius: '8px'
               }}>
                 <Text strong style={{ fontSize: '18px', color: '#1890ff' }}>
-                  让每一次剪发都成为美好的开始
+                  让每一次服务都成为美好的开始
                 </Text>
               </div>
             </div>

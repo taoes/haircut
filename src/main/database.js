@@ -36,11 +36,12 @@ class Database {
         const createUserTable = `
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                phone TEXT UNIQUE NOT NULL,
                 name TEXT NOT NULL,
-                gender TEXT NOT NULL,
+                phone TEXT UNIQUE NOT NULL,
+                sex TEXT NOT NULL,
+                level TEXT NOT NULL,
+                counts INTEGER NOT NULL DEFAULT 0,
                 balance REAL DEFAULT 0,
-                register_time TEXT,
                 last_consume_time TEXT,
                 remark TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -55,6 +56,31 @@ class Database {
                 console.log('用户表创建成功');
             }
         });
+
+
+        const createMoneyTable = `
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                type TEXT UNIQUE NOT NULL,
+                price_before INTEGER NOT NULL default 0,
+                price_after INTEGER NOT NULL default 0,
+                counts INTEGER NOT NULL default 0,
+                discount INTEGER NOT NULL default 0,
+                remark TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        `;
+
+        this.db.run(createMoneyTable, (err) => {
+            if (err) {
+                console.error('创建金额表失败:', err.message);
+            } else {
+                console.log('用户表创建成功');
+            }
+        });
+
     }
     query(sql, params = []) {
         return new Promise((resolve, reject) => {

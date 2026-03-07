@@ -20,6 +20,23 @@ import dayjs from 'dayjs';
 
 const { Option } = Select;
 
+const levelOptionOfVip = [];
+
+for (let index = 1; index < 10; index++) {
+    levelOptionOfVip.push({
+        label: `VIP${index}`,
+        value: index
+    });
+
+}
+const levelOptions = [{
+    label: '普通',
+    value: '0'
+}, ...levelOptionOfVip]
+
+
+
+
 function User() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -67,33 +84,10 @@ function User() {
     ];
 
     // 获取用户列表
-    const fetchUsers = () => {
+    const fetchUsers = async () => {
         setLoading(true);
-
-        // 模拟API调用
-        setTimeout(() => {
-            let filteredUsers = [...mockUsers];
-
-            // 搜索过滤
-            if (searchText) {
-                filteredUsers = filteredUsers.filter(user =>
-                    user.name.includes(searchText) ||
-                    user.phone.includes(searchText)
-                );
-            }
-
-            // 分页处理
-            const startIndex = (currentPage - 1) * pageSize;
-            const endIndex = startIndex + pageSize;
-            const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
-
-            setUsers(paginatedUsers);
-            setTotal(filteredUsers.length);
-            setLoading(false);
-        }, 500);
-
-        console.log(window.api);
-
+        
+        console.log(window.electronAPI);
     };
 
     useEffect(() => {
@@ -195,36 +189,31 @@ function User() {
             )
         },
         {
-            title: '手机号',
+            title: '卡号/手机号',
             dataIndex: 'phone',
             key: 'phone',
         },
         {
             title: '性别',
-            dataIndex: 'gender',
-            key: 'gender',
-            render: (gender) => (
-                <Tag color={gender === 'male' ? 'blue' : 'pink'}>
-                    {gender === 'male' ? '男' : '女'}
-                </Tag>
-            )
+            dataIndex: 'sex',
+            key: 'sex'
         },
         {
             title: '余额(元)',
-            dataIndex: 'balance',
-            key: 'balance',
-            render: (balance) => `¥${balance.toFixed(2)}`,
-            sorter: (a, b) => a.balance - b.balance,
+            dataIndex: 'countValue',
+            key: 'countValue',
+            sorter: (a, b) => a.countValue - b.countValue,
         },
         {
-            title: '注册时间',
-            dataIndex: 'registerTime',
-            key: 'registerTime',
+            title: '会员等级',
+            dataIndex: 'level',
+            key: 'level',
+            render: (v) => "VIP"+v
         },
         {
             title: '最近消费时间',
-            dataIndex: 'lastConsumeTime',
-            key: 'lastConsumeTime',
+            dataIndex: 'createdAt',
+            key: 'createdAt',
         },
         {
             title: '备注',
@@ -235,7 +224,7 @@ function User() {
             title: '操作',
             key: 'action',
             fixed: 'right',
-            width: 150,
+            width: 250,
             render: (_, record) => (
                 <Space size="middle">
                     <Button
@@ -247,10 +236,17 @@ function User() {
                     </Button>
 
                     <Button
+                        type='default'
+                        size="small"
+                    >
+                        核销
+                    </Button>
+
+                    <Button
                         danger
                         size="small"
                     >
-                        历史
+                        记录
                     </Button>
 
                 </Space>
@@ -345,21 +341,21 @@ function User() {
                 >
                     <Form.Item
                         name="name"
-                        label="姓名"
-                        rules={[{ required: true, message: '请输入姓名' }]}
+                        label="用户名"
+                        rules={[{ required: true, message: '请输入用户名' }]}
                     >
-                        <Input placeholder="请输入姓名" />
+                        <Input placeholder="请输入用户名" />
                     </Form.Item>
 
                     <Form.Item
                         name="phone"
-                        label="手机号"
+                        label="卡号"
                         rules={[
-                            { required: true, message: '请输入手机号' },
-                            { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号格式' }
+                            { required: true, message: '请输入11位卡号' },
+                            { pattern: /^1[3-9]\d{9}$/, message: '请输入11位卡号' }
                         ]}
                     >
-                        <Input placeholder="请输入手机号" />
+                        <Input placeholder="请输入11位卡号" />
                     </Form.Item>
 
                     <Form.Item
@@ -370,40 +366,19 @@ function User() {
                         <Select placeholder="请选择性别">
                             <Option value="male">男</Option>
                             <Option value="female">女</Option>
+                            <Option value="female">保密</Option>
                         </Select>
                     </Form.Item>
 
                     <Form.Item
-                        name="balance"
-                        label="余额"
-                        rules={[{ required: true, message: '请输入余额' }]}
+                        name="level"
+                        label="等级"
+                        rules={[{ required: true, message: '请选择用户等级' }]}
                     >
-                        <Input placeholder="请输入余额" type="number" addonAfter="元" />
+                        <Select placeholder="请选择用户等级" options={levelOptions}>
+                        </Select>
                     </Form.Item>
 
-                    <Form.Item
-                        name="registerTime"
-                        label="注册时间"
-                    >
-                        <DatePicker
-                            showTime
-                            format="YYYY-MM-DD HH:mm:ss"
-                            placeholder="请选择注册时间"
-                            style={{ width: '100%' }}
-                        />
-                    </Form.Item>
-
-                    <Form.Item
-                        name="lastConsumeTime"
-                        label="最近消费时间"
-                    >
-                        <DatePicker
-                            showTime
-                            format="YYYY-MM-DD HH:mm:ss"
-                            placeholder="请选择最近消费时间"
-                            style={{ width: '100%' }}
-                        />
-                    </Form.Item>
 
                     <Form.Item
                         name="remark"

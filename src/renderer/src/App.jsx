@@ -92,13 +92,13 @@ function App() {
       </Header>
 
       <Layout>
-        <Sider width={200} style={{ background: colorBgContainer, height: 'calc(100vh - 64px)' }}>
+        <Sider width={200} style={{ background: colorBgContainer, height: 'calc(100vh - 150px)' }}>
 
           <Menu
             mode="vertical"
             defaultSelectedKeys={[currentItem]}
             items={items}
-            style={{ flex: 1, minWidth: 0, height: '100%' }}
+            style={{ flex: 1, minWidth: 0, height: 'calc(100vh - 150px)' }}
             onClick={itemSelected}
           />
         </Sider>
