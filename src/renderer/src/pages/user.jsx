@@ -9,7 +9,8 @@ import {
     DatePicker,
     Space,
     message,
-    Tag
+    Tag,
+    InputNumber
 } from 'antd';
 import {
     PlusOutlined,
@@ -41,6 +42,7 @@ function User() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
+    const [hxModalVisible, setHxModalVisible] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
     const [searchText, setSearchText] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -48,46 +50,29 @@ function User() {
     const [total, setTotal] = useState(0);
 
     const [form] = Form.useForm();
+    const [hxForm] = Form.useForm();
 
-    // 模拟用户数据
-    const mockUsers = [
-        {
-            id: 1,
-            phone: '13800138001',
-            name: '张三',
-            gender: 'male',
-            balance: 1200.50,
-            registerTime: '2024-01-15 10:30:00',
-            lastConsumeTime: '2024-03-20 14:20:00',
-            remark: 'VIP客户'
-        },
-        {
-            id: 2,
-            phone: '13800138002',
-            name: '李四',
-            gender: 'female',
-            balance: 850.00,
-            registerTime: '2024-02-01 09:15:00',
-            lastConsumeTime: '2024-03-18 16:45:00',
-            remark: '常客'
-        },
-        {
-            id: 3,
-            phone: '13800138003',
-            name: '王五',
-            gender: 'male',
-            balance: 2300.80,
-            registerTime: '2024-01-20 11:20:00',
-            lastConsumeTime: '2024-03-22 10:30:00',
-            remark: '新客户'
-        }
-    ];
+
 
     // 获取用户列表
     const fetchUsers = async () => {
         setLoading(true);
-        
-        console.log(window.electronAPI);
+
+        try {
+            // 调用主进程中的 userDao.getUsers 方法
+            const result = await window.api.getUsers(searchText, currentPage, pageSize);
+
+            if (result) {
+                setUsers(result.users || []);
+                setTotal(result.total || 0);
+            }
+            console.log('获取用户列表成功:', result);
+        } catch (error) {
+            console.error('获取用户列表失败:', error);
+            message.error('获取用户列表失败：' + error.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
@@ -98,6 +83,7 @@ function User() {
     const handleSearch = (value) => {
         setSearchText(value);
         setCurrentPage(1);
+        fetchUsers();
     };
 
     // 打开新增/编辑模态框
@@ -116,12 +102,29 @@ function User() {
         }
     };
 
+    // 打开核销模态框
+    const showHxModal = (user) => {
+        setEditingUser(user);
+        setHxModalVisible(true);
+        hxForm.resetFields();
+    };
+
+    // 关闭模态框
+    const closeHxModal = () => {
+        setHxModalVisible(false);
+        setEditingUser(null);
+        hxForm.resetFields();
+    };
+
     // 关闭模态框
     const closeModal = () => {
         setModalVisible(false);
         setEditingUser(null);
         form.resetFields();
     };
+
+
+
 
     // 保存用户
     const handleSave = async () => {
@@ -135,24 +138,54 @@ function User() {
                         ? { ...user, ...values, id: editingUser.id }
                         : user
                 );
+                console.log('更新用户', updatedUsers);
+                let data = await window.api.updateUser(updatedUsers)
+                console.log('更新用户完成', data);
                 setUsers(updatedUsers);
                 message.success('用户信息更新成功');
+                closeModal();
             } else {
-                // 新增用户
                 const newUser = {
-                    id: Date.now(),
                     ...values,
-                    registerTime: values.registerTime ? values.registerTime.format('YYYY-MM-DD HH:mm:ss') : '',
-                    lastConsumeTime: values.lastConsumeTime ? values.lastConsumeTime.format('YYYY-MM-DD HH:mm:ss') : ''
                 };
-                setUsers([...users, newUser]);
+                console.log('创建用户', newUser);
+                let data = await window.api.createUser(newUser)
+                console.log('创建用户完成', data);
                 message.success('用户添加成功');
-            }
+                fetchUsers();
 
+            }
             closeModal();
         } catch (error) {
             console.error('保存失败:', error);
         }
+    };
+
+    // 保存核销
+    const handleHxSave = async () => {
+        const values = await hxForm.validateFields();
+        if (!editingUser) {
+            message.error('用户信息缺失，无法核销');
+            return;
+        }
+        let price = values.counts;
+        if (values.type === '消费') {
+            price = (price * (values.discount / 100)).toFixed(2);
+        }
+
+        Modal.confirm({
+            title: '确认核销',
+            content: `用户 ${editingUser.name} 本次 ${values.type} 共计 ${price}元, 请确认是否提交？`,
+            okText: '确认',
+            cancelText: '取消',
+            onOk: async () => {
+                let value = { userId: editingUser.id, ...values }
+                console.log('核销信息', value);
+                await window.api.createMoney(value);
+                message.success('用户核销成功');
+                closeHxModal();
+            },
+        });
     };
 
     // 删除用户
@@ -200,20 +233,20 @@ function User() {
         },
         {
             title: '余额(元)',
-            dataIndex: 'countValue',
-            key: 'countValue',
-            sorter: (a, b) => a.countValue - b.countValue,
+            dataIndex: 'counts',
+            key: 'counts',
+            sorter: (a, b) => a.counts - b.counts,
         },
         {
             title: '会员等级',
             dataIndex: 'level',
             key: 'level',
-            render: (v) => "VIP"+v
+            render: (v) => "VIP" + v
         },
         {
             title: '最近消费时间',
-            dataIndex: 'createdAt',
-            key: 'createdAt',
+            dataIndex: 'last_consume_time',
+            key: 'last_consume_time',
         },
         {
             title: '备注',
@@ -238,6 +271,7 @@ function User() {
                     <Button
                         type='default'
                         size="small"
+                        onClick={() => showHxModal(record)}
                     >
                         核销
                     </Button>
@@ -328,15 +362,16 @@ function User() {
                 title={editingUser ? '编辑用户' : '新增用户'}
                 open={modalVisible}
                 onOk={handleSave}
+                cancelText="取消"
+                okText="保存"
                 onCancel={closeModal}
-                width={600}
-                maskClosable={false}
+
             >
                 <Form
                     form={form}
                     layout="vertical"
                     initialValues={{
-                        gender: 'male'
+                        gender: '男'
                     }}
                 >
                     <Form.Item
@@ -359,14 +394,14 @@ function User() {
                     </Form.Item>
 
                     <Form.Item
-                        name="gender"
+                        name="sex"
                         label="性别"
                         rules={[{ required: true, message: '请选择性别' }]}
                     >
                         <Select placeholder="请选择性别">
-                            <Option value="male">男</Option>
-                            <Option value="female">女</Option>
-                            <Option value="female">保密</Option>
+                            <Option value="男">男</Option>
+                            <Option value="女">女</Option>
+                            <Option value="保密">保密</Option>
                         </Select>
                     </Form.Item>
 
@@ -385,6 +420,60 @@ function User() {
                         label="备注"
                     >
                         <Input.TextArea placeholder="请输入备注信息" rows={3} />
+                    </Form.Item>
+                </Form>
+            </Modal>
+
+            {/* 用户核销消费模态框 */}
+            <Modal
+                title="用户核销消费"
+                open={hxModalVisible}
+                onCancel={() => closeHxModal()}
+                onOk={handleHxSave}
+                cancelText="取消"
+                okText="保存"
+            >
+                <Form
+                    form={hxForm}
+                    layout="vertical"
+                    initialValues={{ discount: 100, type: '消费' ,remark: `${new Date().toLocaleString()} 操作变更` }}
+                >
+                    <Form.Item
+                        name="type"
+                        label="核销类型"
+                        rules={[{ required: true, message: '请选择消费类型' }]}
+                    >
+
+                        <Select placeholder="请选择消费类型">
+                            <Option value="消费">消费</Option>
+                            <Option value="充值">充值</Option>
+                        </Select>
+                    </Form.Item>
+
+                    <Form.Item
+                        name="discount"
+                        label="折扣"
+                        rules={[{ required: true, message: '请输入折扣' }]}
+
+                    >
+                        <InputNumber placeholder="请输入折扣" min={10} max={100} step={10} style={{ width: '100%' }} disabled={hxForm.getFieldValue('type') === '充值'} />
+
+                    </Form.Item>
+
+                    <Form.Item
+                        name="counts"
+                        label="折前金额"
+                        rules={[{ required: true, message: '请输入金额' }]}
+                    >
+                        <InputNumber min={0} step={5} style={{ width: '100%' }} placeholder="请输入折扣前的金额" />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="remark"
+                        label="备注"
+                        rules={[{ required: true, message: '请输入备注信息' }]}
+                    >
+                        <Input.TextArea placeholder="请输入备注信息" />
                     </Form.Item>
                 </Form>
             </Modal>

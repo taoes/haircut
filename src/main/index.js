@@ -1,6 +1,7 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
-import  UserDao  from './userDao'
+import UserDao from './userDao'
+import MoneyDao from './moneyDao'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 
@@ -50,10 +51,57 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
   const userDao = new UserDao();
+  const moneyDao = new MoneyDao();
 
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
-  ipcMain.on('userList', () => userDao.getUsers())
+
+  // 用户管理相关 IPC 处理
+  ipcMain.handle('user:getUsers', async (event, searchText, page, pageSize) => {
+    try {
+      return await userDao.getUsers(searchText, page, pageSize);
+    } catch (error) {
+      console.error('IPC 调用获取用户列表失败:', error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle('user:createUser', async (event, userData) => {
+    try {
+      return await userDao.createUser(userData);
+    } catch (error) {
+      console.error('IPC 调用创建用户失败:', error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle('user:updateUser', async (event, userData) => {
+    try {
+      return await userDao.updateUser(userData.id, userData);
+    } catch (error) {
+      console.error('IPC 调用更新用户失败:', error);
+      throw error;
+    }
+  });
+
+  // 金额管理相关 IPC 处理
+  ipcMain.handle('money:createMoney', async (event, moneyData) => {
+    try {
+      return await moneyDao.createMoney(moneyData);
+    } catch (error) {
+      console.error('IPC 调用创建金额记录失败:', error);
+      throw error;
+    }
+  });
+
+  ipcMain.handle('money:getMoneys', async (event, userId, page, pageSize) => {
+    try {
+      return await moneyDao.getMoneys(userId, page, pageSize);
+    } catch (error) {
+      console.error('IPC 调用获取金额记录失败:', error);
+      throw error;
+    }
+  });
 
   createWindow()
 

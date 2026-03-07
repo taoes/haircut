@@ -59,7 +59,7 @@ class Database {
 
 
         const createMoneyTable = `
-            CREATE TABLE IF NOT EXISTS users (
+            CREATE TABLE IF NOT EXISTS moneys (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
                 type TEXT UNIQUE NOT NULL,

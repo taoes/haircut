@@ -1,3 +1,4 @@
+import { use } from 'react';
 import Database from './database';
 
 class UserDao {
@@ -9,10 +10,7 @@ class UserDao {
     async getUsers(searchText = '', page = 1, pageSize = 10) {
         try {
             let sql = `
-                SELECT id, phone, name, gender, balance, 
-                       register_time as registerTime, 
-                       last_consume_time as lastConsumeTime, 
-                       remark, created_at as createdAt
+                SELECT *
                 FROM users 
                 WHERE 1=1
             `;
@@ -26,7 +24,7 @@ class UserDao {
             }
             
             // 添加分页
-            sql += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+            sql += ` ORDER BY id DESC LIMIT ? OFFSET ?`;
             params.push(pageSize, (page - 1) * pageSize);
             
             const users = await this.db.query(sql, params);
@@ -76,22 +74,24 @@ class UserDao {
     async createUser(userData) {
         try {
             const sql = `
-                INSERT INTO users (phone, name, gender, balance, register_time, last_consume_time, remark)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO users (phone, name, sex,counts, balance, level,last_consume_time, remark)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             `;
             const params = [
                 userData.phone,
                 userData.name,
-                userData.gender,
-                userData.balance || 0,
+                userData.sex,
+                0,
+                0,
+                userData.level,
                 userData.registerTime || new Date().toISOString().slice(0, 19).replace('T', ' '),
-                userData.lastConsumeTime || null,
                 userData.remark || ''
             ];
             
             const result = await this.db.run(sql, params);
             return { id: result.id, ...userData };
         } catch (error) {
+            console.error(error);
             console.error('创建用户失败:', error);
             throw error;
         }
@@ -102,17 +102,13 @@ class UserDao {
         try {
             const sql = `
                 UPDATE users 
-                SET phone = ?, name = ?, gender = ?, balance = ?, 
-                    register_time = ?, last_consume_time = ?, remark = ?, updated_at = CURRENT_TIMESTAMP
+                SET phone = ?, name = ?, sex = ?, sex = ?, remark = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             `;
             const params = [
                 userData.phone,
                 userData.name,
-                userData.gender,
-                userData.balance || 0,
-                userData.registerTime || null,
-                userData.lastConsumeTime || null,
+                userData.sex,
                 userData.remark || '',
                 id
             ];

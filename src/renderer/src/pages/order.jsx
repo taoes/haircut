@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { 
-  Table, 
-  Input, 
-  Space, 
+import {
+  Table,
+  Input,
+  Space,
   Tag,
   Button
 } from 'antd';
-import { 
+import {
   SearchOutlined,
   WalletOutlined,
   UserOutlined,
@@ -21,96 +21,23 @@ function Order() {
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
 
-  // 模拟订单数据
-  const mockOrders = [
-    {
-      id: 1,
-      userName: '张三',
-      userPhone: '13800138001',
-      beforeAmount: 1200.50,
-      afterAmount: 1150.50,
-      changeAmount: -50.00,
-      operator: '管理员A',
-      operateTime: '2024-03-20 14:30:00',
-      type: 'consume' // consume: 消费, recharge: 充值
-    },
-    {
-      id: 2,
-      userName: '李四',
-      userPhone: '13800138002',
-      beforeAmount: 850.00,
-      afterAmount: 950.00,
-      changeAmount: 100.00,
-      operator: '管理员B',
-      operateTime: '2024-03-19 16:45:00',
-      type: 'recharge'
-    },
-    {
-      id: 3,
-      userName: '王五',
-      userPhone: '13800138003',
-      beforeAmount: 2300.80,
-      afterAmount: 2200.80,
-      changeAmount: -100.00,
-      operator: '管理员A',
-      operateTime: '2024-03-18 10:15:00',
-      type: 'consume'
-    },
-    {
-      id: 4,
-      userName: '赵六',
-      userPhone: '13800138004',
-      beforeAmount: 500.00,
-      afterAmount: 800.00,
-      changeAmount: 300.00,
-      operator: '管理员C',
-      operateTime: '2024-03-17 13:20:00',
-      type: 'recharge'
-    },
-    {
-      id: 5,
-      userName: '张三',
-      userPhone: '13800138001',
-      beforeAmount: 1150.50,
-      afterAmount: 1100.50,
-      changeAmount: -50.00,
-      operator: '管理员B',
-      operateTime: '2024-03-16 09:30:00',
-      type: 'consume'
-    }
-  ];
+
 
   // 获取订单列表
-  const fetchOrders = () => {
+  const fetchOrders = async () => {
     setLoading(true);
-    
-    // 模拟API调用
-    setTimeout(() => {
-      let filteredOrders = [...mockOrders];
-      
-      // 搜索过滤
-      if (searchText) {
-        filteredOrders = filteredOrders.filter(order => 
-          order.userName.includes(searchText) || 
-          order.userPhone.includes(searchText)
-        );
-      }
-      
-      // 按时间倒序排列
-      filteredOrders.sort((a, b) => 
-        new Date(b.operateTime) - new Date(a.operateTime)
-      );
-      
-      // 分页处理
-      const startIndex = (currentPage - 1) * pageSize;
-      const endIndex = startIndex + pageSize;
-      const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
-      
-      setOrders(paginatedOrders);
-      setTotal(filteredOrders.length);
+    try {
+      let data = await window.api.getMoneys(searchText, currentPage, pageSize);
+      setOrders(data);
+      setTotal(data.length); // 这里需要根据实际返回的数据结构调整
+      console.log('订单列表数据:', data);
+    } catch (err) {
+      console.error('获取订单列表失败:', err);
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
+
 
   useEffect(() => {
     fetchOrders();
@@ -140,43 +67,43 @@ function Order() {
             <span>{record.userName}</span>
           </Space>
           <Space style={{ fontSize: '12px', color: '#888' }}>
-            <span>{record.userPhone}</span>
+            <span>{record.phone}</span>
           </Space>
         </Space>
       )
     },
     {
       title: '变动前金额',
-      dataIndex: 'beforeAmount',
-      key: 'beforeAmount',
-      render: (amount) => (
+      dataIndex: 'price_before',
+      key: 'price_before',
+      render: (price_before) => (
         <span style={{ color: '#666' }}>
-          ¥{amount.toFixed(2)}
+          ¥{price_before.toFixed(2)}
         </span>
       ),
       sorter: (a, b) => a.beforeAmount - b.beforeAmount,
     },
     {
       title: '变动后金额',
-      dataIndex: 'afterAmount',
-      key: 'afterAmount',
-      render: (amount) => (
+      dataIndex: 'price_after',
+      key: 'price_after',
+      render: (price_after) => (
         <span style={{ color: '#666' }}>
-          ¥{amount.toFixed(2)}
+          ¥{price_after.toFixed(2)}
         </span>
       ),
       sorter: (a, b) => a.afterAmount - b.afterAmount,
     },
     {
       title: '变动金额',
-      dataIndex: 'changeAmount',
-      key: 'changeAmount',
-      render: (amount) => (
-        <Tag 
-          color={amount > 0 ? 'green' : 'red'}
-          icon={amount > 0 ? <DollarOutlined /> : <WalletOutlined />}
+      dataIndex: 'counts',
+      key: 'counts',
+      render: (counts, record) => (
+        <Tag
+          color={record.type === '充值' ? 'green' : 'red'}
+          icon={record.type === '充值' ? <DollarOutlined /> : <WalletOutlined />}
         >
-          {amount > 0 ? '+' : ''}{amount.toFixed(2)}
+          {record.type === '充值' ? '+' : ''}{counts.toFixed(2)}
         </Tag>
       ),
       sorter: (a, b) => a.changeAmount - b.changeAmount,
@@ -202,15 +129,14 @@ function Order() {
       key: 'operator',
       render: (operator) => (
         <Space>
-          <span>{operator}</span>
+          <span>管理员</span>
         </Space>
       )
     },
     {
       title: '操作时间',
-      dataIndex: 'operateTime',
-      key: 'operateTime',
-      sorter: (a, b) => new Date(a.operateTime) - new Date(b.operateTime),
+      dataIndex: 'created_at',
+      key: 'created_at'
     }
   ];
 
@@ -220,11 +146,11 @@ function Order() {
         <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>
           订单管理
         </h1>
-        
+
         {/* 搜索区域 */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
           alignItems: 'center',
           marginBottom: '16px'
         }}>
@@ -236,8 +162,8 @@ function Order() {
               onPressEnter={(e) => handleSearch(e.target.value)}
               allowClear
             />
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               icon={<SearchOutlined />}
               onClick={(e) => {
                 const input = e.target.closest('.ant-input-affix-wrapper')?.querySelector('input');
@@ -247,7 +173,7 @@ function Order() {
               搜索
             </Button>
           </Space>
-          
+
           <div style={{ fontSize: '14px', color: '#666' }}>
             共 {total} 条订单记录
           </div>
